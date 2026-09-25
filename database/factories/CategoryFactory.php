@@ -2,28 +2,34 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Category>
+ * @extends Factory<Category>
  */
 class CategoryFactory extends Factory
 {
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
-        $name = $this->faker->unique()->word(10);
         return [
-            'name' => $name,
-            'slug' => Str::slug($name),
-            'image' => 'categories/'.$this->faker->image('public/storage/categories', 640, 480, null, false),
-            'is_featured' => $this->faker->boolean(),
-            'status' => $this->faker->boolean()
+            'name' => ucfirst(fake()->unique()->words(2, true)),
+            'description' => fake()->sentence(),
+            'is_featured' => false,
+            'is_visible' => true,
         ];
+    }
+
+    public function featured(): static
+    {
+        return $this->state(fn (array $attributes) => ['is_featured' => true]);
+    }
+
+    public function hidden(): static
+    {
+        return $this->state(fn (array $attributes) => ['is_visible' => false]);
     }
 }

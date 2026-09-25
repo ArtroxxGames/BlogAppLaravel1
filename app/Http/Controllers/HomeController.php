@@ -3,55 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
-use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function __invoke(Request $request): View
     {
-        $this->middleware('auth');
-    }
+        $search = $request->string('q')->trim()->toString();
 
-    /**
-     * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
-    public function index()
-    {
-        //obtener los articulos publicos(1)
-        $articles = Article::where('status', '1')
-            ->orderBy('id', 'desc') //SELECT * FROM articles WHERE STATUS  = 1 ORDER BY DESC
-            ->simplePaginate(10);
+        $articles = Article::published()
+            ->search($search)
+            ->with(['author', 'category'])
+            ->withCount('comments')
+            ->withAvg('comments', 'rating')
+            ->latest('published_at')
+            ->paginate(9)
+            ->withQueryString();
 
-        //obtener las categorias con estado publicos(1) y destacadas(1)
-        $navbar = Category::where([
-            ['status', '1'],
-            ['is_featured', '1']
-        ])->paginate(3);
-
-        //el compact en la view de home envia los resultados de las querys realizadas arriba a la home para renderizarlas
-
-        return view('home.index', compact('articles', 'navbar'));
-        //return view('index');
-    }
-
-    //funcion para mostrar todas las categorias
-    public function all(){
-        $categories = Category::where('status', 1)
-            ->simplePaginate(20);
-
-        $navbar = Category::where([
-            ['status', '1'],
-            ['is_featured', '1']
-        ])->paginate(3);
-
-        return view('home.all-categories', compact('categories', 'navbar'));
+        return view('blog.home', compact('articles', 'search'));
     }
 }

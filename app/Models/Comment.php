@@ -2,22 +2,37 @@
 
 namespace App\Models;
 
+use Database\Factories\CommentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Comment extends Model
 {
+    /** @use HasFactory<CommentFactory> */
     use HasFactory;
 
-    protected $guarded = ['id', 'created_at', 'updated_at'];
+    protected $fillable = [
+        'rating',
+        'body',
+    ];
 
-    //definicion de relacion muchos a uno con user
-    public function user(){
-        return $this->belongsTo(User::class);
+    protected function casts(): array
+    {
+        return [
+            'rating' => 'integer',
+        ];
     }
 
-    //definicion de relacion muchos a uno con article
-    public function article(){
+    /** @return BelongsTo<User, $this> */
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /** @return BelongsTo<Article, $this> */
+    public function article(): BelongsTo
+    {
         return $this->belongsTo(Article::class);
     }
 }

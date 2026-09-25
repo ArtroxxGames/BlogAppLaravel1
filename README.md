@@ -1,66 +1,131 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Blog App
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Plataforma de blog hecha con **Laravel 12**, **Blade**, **Tailwind CSS** y **Alpine.js**.
+Cualquier persona registrada puede escribir artículos en Markdown, comentarlos y valorarlos con estrellas;
+los administradores gestionan categorías, moderan comentarios y administran usuarios.
 
-## About Laravel
+## Funcionalidades
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Blog público**
+- Portada con los últimos artículos, paginación y buscador.
+- Página de artículo con Markdown renderizado de forma segura, tiempo de lectura, valoración media y artículos relacionados.
+- Listado de categorías y página por categoría; las categorías destacadas aparecen en el menú.
+- Perfil público de cada autor con biografía, redes sociales y sus artículos.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**Autores** (cualquier usuario registrado)
+- Panel con estadísticas: artículos publicados, borradores, comentarios recibidos y valoración media.
+- Crear, editar y eliminar sus artículos: borrador, publicación inmediata o **programada** a una fecha futura.
+- Imagen de portada opcional; el slug de la URL se genera solo y no cambia al editar.
+- Comentar y valorar (1–5 ★) cada artículo una sola vez.
+- Perfil editable: foto, profesión, biografía y enlaces a Twitter/X, LinkedIn y GitHub.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**Administradores**
+- CRUD de categorías (visibles/ocultas, destacadas, imagen).
+- Moderación de comentarios.
+- Gestión de usuarios: dar o quitar permisos de administrador.
 
-## Learning Laravel
+**Calidad**
+- Autorización con *policies* y un *gate* `admin`: nadie puede editar ni borrar contenido ajeno.
+- Validación con *Form Requests* y mensajes en español.
+- Los archivos subidos se borran automáticamente al reemplazarlos o al eliminar su registro.
+- Modo estricto de Eloquent en desarrollo para detectar consultas N+1.
+- 74 tests automatizados y CI con GitHub Actions (PHP 8.2, 8.3 y 8.4).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Requisitos
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- PHP 8.2 o superior con las extensiones `pdo_sqlite` (o `pdo_mysql`) y `gd`
+- Composer 2
+- Node.js 20 o superior
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Instalación
 
-## Laravel Sponsors
+```bash
+git clone https://github.com/ArtroxxGames/BlogAppLaravel1.git
+cd BlogAppLaravel1
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+composer install
+npm install
 
-### Premium Partners
+cp .env.example .env
+php artisan key:generate
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+touch database/database.sqlite   # por defecto se usa SQLite
+php artisan migrate --seed       # crea las tablas y carga datos de demostración
+php artisan storage:link         # hace públicas las imágenes subidas
 
-## Contributing
+composer run dev                 # servidor, cola, logs y Vite a la vez
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Abre <http://localhost:8000> e inicia sesión con la cuenta de demostración:
 
-## Code of Conduct
+| Correo              | Contraseña | Rol           |
+|---------------------|------------|---------------|
+| `admin@example.com` | `password` | Administrador |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+> Cambia esa contraseña, o no ejecutes el *seeder*, si despliegas la aplicación en un servidor real.
 
-## Security Vulnerabilities
+### Usar MySQL en lugar de SQLite
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Edita el `.env`:
 
-## License
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=blog
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Correo
+
+Por defecto los correos (bienvenida, recuperación de contraseña) se escriben en `storage/logs/laravel.log`
+(`MAIL_MAILER=log`). Configura las variables `MAIL_*` para enviarlos de verdad.
+El correo de bienvenida se envía por la cola, así que en producción necesitas un *worker* (`php artisan queue:work`).
+
+## Tests
+
+```bash
+php artisan test        # suite completa
+vendor/bin/pint         # formatea el código
+```
+
+## Estructura
+
+```
+app/
+├── Http/Controllers/
+│   ├── Admin/          # categorías, comentarios y usuarios (solo administradores)
+│   ├── Dashboard/      # gestión de artículos del autor
+│   └── ...             # blog público, comentarios y perfil
+├── Http/Requests/      # validación de formularios
+├── Models/             # Article, Category, Comment, User
+├── Policies/           # quién puede ver, editar o borrar qué
+└── Notifications/      # correo de bienvenida
+resources/views/
+├── blog/               # páginas públicas
+├── dashboard/          # panel del autor
+├── admin/              # panel de administración
+└── components/         # tarjetas, avatar, estrellas, etc.
+lang/es/                # traducciones al español
+tests/Feature/          # tests de extremo a extremo
+```
+
+## Rutas principales
+
+| Ruta                          | Descripción                         |
+|-------------------------------|-------------------------------------|
+| `/`                           | Portada y buscador (`?q=`)          |
+| `/articulos/{slug}`           | Artículo                            |
+| `/categorias`                 | Todas las categorías                |
+| `/categorias/{slug}`          | Artículos de una categoría          |
+| `/autores/{id}`               | Perfil público de un autor          |
+| `/dashboard`                  | Panel del autor                     |
+| `/dashboard/articulos`        | Mis artículos                       |
+| `/admin/categorias`           | Administración de categorías        |
+| `/admin/comentarios`          | Moderación de comentarios           |
+| `/admin/usuarios`             | Administración de usuarios          |
+
+## Licencia
+
+[MIT](https://opensource.org/licenses/MIT)

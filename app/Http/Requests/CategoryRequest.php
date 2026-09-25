@@ -3,32 +3,47 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CategoryRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('admin');
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
-        $slug = request()->isMethod('put') ? 'required|unique:categories,slug' .$this->id : 'required|unique:categories';
-        $image = request()->isMethod('put') ? 'nullable|image' : 'required|image';
         return [
-            'name' => 'required|max:40',
-            'slug' => $slug,
-            'image' => $image,
-            'is_featured' => 'required|boolean',
-            'status' => 'required|boolean',
+            'name' => ['required', 'string', 'max:40', Rule::unique('categories')->ignore($this->route('category'))],
+            'description' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'is_featured' => ['boolean'],
+            'is_visible' => ['boolean'],
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'name' => 'nombre',
+            'description' => 'descripción',
+            'image' => 'imagen',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function categoryData(): array
+    {
+        return [
+            ...$this->safe()->only(['name', 'description']),
+            'is_featured' => $this->boolean('is_featured'),
+            'is_visible' => $this->boolean('is_visible'),
         ];
     }
 }

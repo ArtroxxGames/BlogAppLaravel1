@@ -2,97 +2,70 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileRequest;
-use App\Models\Profile;
-use App\Models\Article;
-use Auth;
-use File;
+use App\Http\Requests\ProfileUpdateRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display the user's profile form.
      */
-    public function index()
+    public function edit(Request $request): View
     {
-        //
+        return view('profile.edit', [
+            'user' => $request->user(),
+        ]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Update the user's profile information.
      */
-    public function create()
+    public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        //
-    }
+        $user = $request->user();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $user->fill($request->safe()->except(['avatar', 'remove_avatar']));
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Profile $profile)
-    {
-        //Actividad para completar el muestreo de info de perfil en el articulo
-        $articles = Article::where([['user_id', Auth::user()->id], ['status', '1']])
-            ->simplePaginate(8);
-
-        return view('subscriber.profiles.show', compact('profile', 'articles'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Profile $profile)
-    {
-        return view('subscriber.profiles.edit', compact('profile'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(ProfileRequest $request, Profile $profile)
-    {
-        //Asignamos al user el usuario autenticado
-        $user = Auth::user();
-        //verificamos la existencia de una imagen actualizada para asignar la nueva o mantener la ya existente
-        if($request->hasFile('photo')){
-            File::delete(public_path('storage/' . $profile->photo));
-
-            $photo = $request['photo']->store('profiles');
-        } else {
-            $photo = $user->profile->photo;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        //asignamos los nuevos datos
-        $user->full_name = $request->full_name;
-        $user->email = $request->email;
-        $user->profile->profession = $request->profession;
-        $user->profile->about = $request->about;
-        $user->profile->twitter = $request->twitter;
-        $user->profile->facebook = $request->facebook;
-        $user->profile->linkedin = $request->linkedin;
-        $user->profile->photo = $photo;
-        //los guardamos y actualizamos en la database
+        if ($request->hasFile('avatar') || $request->boolean('remove_avatar')) {
+            if ($user->avatar_path) {
+                Storage::disk('public')->delete($user->avatar_path);
+            }
+
+            $user->avatar_path = $request->file('avatar')?->store('avatars', 'public');
+        }
+
         $user->save();
-        $user->profile->save();
 
-        return redirect()->route('profiles.edit', $user->profile->id);
-
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete the user's account.
      */
-    public function destroy(Profile $profile)
+    public function destroy(Request $request): RedirectResponse
     {
-        //
+        $request->validateWithBag('userDeletion', [
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = $request->user();
+
+        Auth::logout();
+
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return Redirect::to('/');
     }
 }

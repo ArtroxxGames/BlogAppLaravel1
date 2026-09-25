@@ -3,34 +3,52 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ArticleRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
-        $slug = request()->isMethod('put') ? 'required|unique:articles,slug'.$this->id :'required|unique:articles';
-        $image = request()->isMethod('put') ? 'nullable|mimes:jpeg,jpg,png,gif,svg|max:8000' : 'required|image';
         return [
-            'title' => 'required|min:5|max:255' ,
-            'slug' => $slug,
-            'introduction' => 'required|min:10|max:255',
-            'body' => 'required',
-            'image' => $image,
-            'status' => 'required|boolean',
-            'category_id' => 'required|integer',
+            'title' => ['required', 'string', 'min:5', 'max:255'],
+            'excerpt' => ['required', 'string', 'min:10', 'max:300'],
+            'body' => ['required', 'string', 'min:20'],
+            'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('is_visible', true)],
+            'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_cover' => ['boolean'],
+            'status' => ['required', Rule::in(['draft', 'published'])],
+            'published_at' => ['nullable', 'date'],
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'title' => 'título',
+            'excerpt' => 'resumen',
+            'body' => 'contenido',
+            'category_id' => 'categoría',
+            'cover' => 'imagen de portada',
+            'status' => 'estado',
+            'published_at' => 'fecha de publicación',
+        ];
+    }
+
+    /**
+     * Datos listos para guardar en el modelo (sin archivos).
+     *
+     * @return array<string, mixed>
+     */
+    public function articleData(): array
+    {
+        return [
+            ...$this->safe()->only(['title', 'excerpt', 'body', 'category_id']),
+            'published_at' => $this->input('status') === 'published'
+                ? ($this->date('published_at') ?? now())
+                : null,
         ];
     }
 }
